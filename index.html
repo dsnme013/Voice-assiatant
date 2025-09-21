@@ -419,7 +419,7 @@
                 const timeout = setTimeout(() => {
                     this.log("Connection timeout - please check your agent ID", 'error');
                     this.handleError("Connection timeout. Please verify your agent ID is correct and the agent is active in ElevenLabs dashboard.");
-                }, 45000);
+                }, 150000);
                 
                 widget.addEventListener('connect', () => clearTimeout(timeout));
                 
