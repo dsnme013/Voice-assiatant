@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Universal ElevenLabs Voice Assistant</title>
+    <meta name="description" content="Cross-platform compatible voice assistant with automatic device optimization">
+    
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        /* Status section */
+        .status-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .status-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-connected { background: #10b981; }
+        .status-connecting { background: #f59e0b; animation: pulse 2s infinite; }
+        .status-disconnected { background: #ef4444; }
+        .status-warning { background: #f59e0b; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        /* Compatibility info */
+        .compatibility-section {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .compatibility-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .compatibility-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .compatibility-item h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+        
+        .compatibility-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .check-pass { color: #10b981; }
+        .check-fail { color: #ef4444; }
+        .check-warning { color: #f59e0b; }
+        
+        /* Controls */
+        .controls-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .controls-grid {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+        }
+        
+        /* Widget container */
+        .widget-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e5e7eb;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .widget-placeholder {
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        .widget-placeholder p {
+            margin-bottom: 10px;
+        }
+        
+        /* Alert messages */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+        
+        .alert h4 {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .alert ul {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+        
+        .alert-actions {
+            margin-top: 12px;
+        }
+        
+        .alert-btn {
+            background: currentColor;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 8px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        /* Debug section */
+        .debug-section {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .debug-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .debug-header h3 {
+            color: #f1f5f9;
+            font-family: inherit;
+        }
+        
+        .debug-log {
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+        }
+        
+        .debug-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        
+        .debug-timestamp {
+            color: #64748b;
+            margin-right: 8px;
+        }
+        
+        .debug-level-info { color: #3b82f6; }
+        .debug-level-warning { color: #f59e0b; }
+        .debug-level-error { color: #ef4444; }
+        .debug-level-success { color: #10b981; }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .main-container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .compatibility-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.7rem;
+            }
+            
+            .main-container {
+                padding: 15px;
+            }
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* iOS specific fixes */
+        input, button, select, textarea {
+            -webkit-appearance: none;
+            border-radius: 0;
+        }
+        
+        /* Prevent zoom on iOS */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Universal Voice Assistant</h1>
+            <p>Cross-platform compatible with automatic device optimization</p>
+        </div>
+        
+        <!-- Status Section -->
+        <div class="status-section">
+            <h3 style="margin-bottom: 15px; font-size: 1.2rem;">System Status</h3>
+            <div class="status-row">
+                <span id="connectionIndicator" class="status-indicator status-disconnected"></span>
+                <span id="connectionStatus">Initializing system checks...</span>
+            </div>
+            <div class="status-row">
+                <span id="formatIndicator" class="status-indicator status-disconnected"></span>
+                <span id="formatStatus">Detecting optimal audio format...</span>
+            </div>
+            <div class="status-row">
+                <span id="permissionIndicator" class="status-indicator status-disconnected"></span>
+                <span id="permissionStatus">Microphone permissions not requested</span>
+            </div>
+        </div>
+        
+        <!-- Compatibility Information -->
+        <div class="compatibility-section">
+            <h3 style="margin-bottom: 15px; font-size: 1.2rem;">Device Compatibility Report</h3>
+            <div class="compatibility-grid" id="compatibilityGrid">
+                <!-- Compatibility items will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+        
+        <!-- Controls -->
+        <div class="controls-section">
+            <div class="controls-grid">
+                <button id="startBtn" class="btn" onclick="startVoiceConversation()" disabled>
+                    <span id="startBtnText">Start Voice Assistant</span>
+                </button>
+                <button id="stopBtn" class="btn btn-danger" onclick="stopVoiceConversation()" disabled>
+                    Stop Conversation
+                </button>
+                <button id="testBtn" class="btn btn-secondary" onclick="runCompatibilityTest()">
+                    Re-test Compatibility
+                </button>
+            </div>
+        </div>
+        
+        <!-- Widget Container -->
+        <div class="widget-section" id="widgetContainer">
+            <div class="widget-placeholder">
+                <p>Voice assistant will appear here when started</p>
+                <p style="font-size: 0.9rem; color: #9ca3af;">Click "Start Voice Assistant" to begin</p>
+            </div>
+        </div>
+        
+        <!-- Debug Section -->
+        <div class="debug-section">
+            <div class="debug-header">
+                <h3>Debug Console</h3>
+                <button onclick="clearDebugLog()" style="background: #374151; color: #e5e7eb; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                    Clear
+                </button>
+            </div>
+            <div class="debug-log" id="debugLog">
+                <div class="debug-entry">
+                    <span class="debug-timestamp">[--:--:--]</span>
+                    <span class="debug-level-info">System initializing...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ElevenLabs Script -->
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript" onload="onElevenLabsLoaded()"></script>
+    
+    <script>
+        /**
+         * Universal ElevenLabs Voice Assistant
+         * Complete cross-platform compatibility implementation
+         */
+        class UniversalVoiceAssistant {
+            constructor() {
+                // Configuration
+                this.agentId = "agent_2801k5dwcesde948vmng3bxfbrds";
+                this.elevenLabsLoaded = false;
+                
+                // State management
+                this.isActive = false;
+                this.currentWidget = null;
+                this.deviceCapabilities = null;
+                this.selectedFormat = null;
+                this.fallbackChain = [];
+                this.currentFallbackIndex = 0;
+                
+                // Initialize
+                this.init();
+            }
+            
+            async init() {
+                this.log("Initializing Universal Voice Assistant", 'info');
+                
+                try {
+                    // Run comprehensive compatibility check
+                    await this.runFullCompatibilityCheck();
+                    
+                    // Enable start button if compatible
+                    this.updateControlsAvailability();
+                    
+                    this.log("Initialization complete", 'success');
+                } catch (error) {
+                    this.log(`Initialization failed: ${error.message}`, 'error');
+                    this.showAlert('error', 'Initialization Error', `Failed to initialize: ${error.message}`);
+                }
+            }
+            
+            async runFullCompatibilityCheck() {
+                this.log("Running comprehensive compatibility analysis...", 'info');
+                this.updateStatus('connection', 'connecting', 'Running compatibility checks...');
+                
+                // Detect all device capabilities
+                this.deviceCapabilities = await this.detectDeviceCapabilities();
+                
+                // Select optimal audio format
+                this.selectedFormat = this.selectOptimalPCMFormat();
+                this.fallbackChain = this.buildFallbackChain();
+                
+                // Update UI with results
+                this.displayCompatibilityResults();
+                this.updateFormatStatus();
+                
+                // Check for critical issues
+                this.checkForCriticalIssues();
+                
+                this.log("Compatibility analysis complete", 'success');
+                this.updateStatus('connection', 'disconnected', 'Ready to start - Click "Start Voice Assistant"');
+            }
+            
+            async detectDeviceCapabilities() {
+                const capabilities = {};
+                
+                try {
+                    // Browser detection
+                    capabilities.browser = this.detectBrowser();
+                    this.log(`Browser: ${capabilities.browser.name} ${capabilities.browser.version}`, 'info');
+                    
+                    // Device type detection
+                    capabilities.device = this.detectDeviceType();
+                    this.log(`Device: ${capabilities.device.type} (${capabilities.device.platform})`, 'info');
+                    
+                    // Security check
+                    capabilities.security = this.checkSecurityRequirements();
+                    this.log(`Security: ${capabilities.security.isSecure ? 'HTTPS' : 'HTTP'} ${capabilities.security.isLocalhost ? '(localhost)' : ''}`, capabilities.security.isSecure ? 'success' : 'warning');
+                    
+                    // WebRTC support
+                    capabilities.webrtc = this.checkWebRTCSupport();
+                    this.log(`WebRTC: ${capabilities.webrtc.available ? 'Supported' : 'Not supported'}`, capabilities.webrtc.available ? 'success' : 'error');
+                    
+                    // Audio context capabilities
+                    capabilities.audioContext = await this.checkAudioContextCapabilities();
+                    this.log(`Audio Context: ${capabilities.audioContext.available ? 'Available' : 'Not available'} (${capabilities.audioContext.sampleRate}Hz)`, capabilities.audioContext.available ? 'success' : 'error');
+                    
+                    // Microphone availability (without requesting permission yet)
+                    capabilities.microphone = await this.checkMicrophoneAvailability();
+                    this.log(`Microphone: ${capabilities.microphone.available ? 'Available' : 'Not available'}`, capabilities.microphone.available ? 'success' : 'error');
+                    
+                    // Network estimation
+                    capabilities.network = this.estimateNetworkCapability();
+                    this.log(`Network: ${capabilities.network.type} (score: ${capabilities.network.score}/4)`, capabilities.network.score >= 3 ? 'success' : 'warning');
+                    
+                    // Hardware estimation
+                    capabilities.hardware = this.estimateHardwareCapability();
+                    this.log(`Hardware: ${capabilities.hardware.cores} cores, ${capabilities.hardware.memory}GB RAM (score: ${capabilities.hardware.score}/6)`, capabilities.hardware.score >= 4 ? 'success' : 'warning');
+                    
+                    // Battery status
+                    capabilities.battery = await this.getBatteryStatus();
+                    if (capabilities.battery) {
+                        this.log(`Battery: ${Math.round(capabilities.battery.level * 100)}% ${capabilities.battery.charging ? '(charging)' : ''}`, capabilities.battery.constraint ? 'warning' : 'info');
+                    }
+                    
+                } catch (error) {
+                    this.log(`Error detecting capabilities: ${error.message}`, 'error');
+                }
+                
+                return capabilities;
+            }
+            
+            detectBrowser() {
+                const userAgent = navigator.userAgent;
+                const browser = { name: 'unknown', version: 0, webRTCOptimal: false };
+                
+                if (userAgent.includes('Chrome') && !userAgent.includes('Edge')) {
+                    browser.name = 'chrome';
+                    const match = userAgent.match(/Chrome\/(\d+)/);
+                    browser.version = match ? parseInt(match[1]) : 0;
+                    browser.webRTCOptimal = browser.version >= 90;
+                } else if (userAgent.includes('Firefox')) {
+                    browser.name = 'firefox';
+                    const match = userAgent.match(/Firefox\/(\d+)/);
+                    browser.version = match ? parseInt(match[1]) : 0;
+                    browser.webRTCOptimal = browser.version >= 85;
+                } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+                    browser.name = 'safari';
+                    const match = userAgent.match(/Version\/(\d+)/);
+                    browser.version = match ? parseInt(match[1]) : 0;
+                    browser.webRTCOptimal = browser.version >= 14;
+                } else if (userAgent.includes('Edge')) {
+                    browser.name = 'edge';
+                    const match = userAgent.match(/Edg\/(\d+)/);
+                    browser.version = match ? parseInt(match[1]) : 0;
+                    browser.webRTCOptimal = browser.version >= 90;
+                }
+                
+                return browser;
+            }
+            
+            detectDeviceType() {
+                const userAgent = navigator.userAgent;
+                const screenWidth = window.screen.width;
+                const isTouch = 'ontouchstart' in window;
+                
+                if (/iPad/.test(userAgent)) {
+                    return { type: 'tablet', platform: 'ios', powerLevel: 'high', mobile: true };
+                } else if (/iPhone|iPod/.test(userAgent)) {
+                    return { type: 'mobile', platform: 'ios', powerLevel: 'medium', mobile: true };
+                } else if (/Android/.test(userAgent)) {
+                    const isTablet = screenWidth >= 768;
+                    return { 
+                        type: isTablet ? 'tablet' : 'mobile', 
+                        platform: 'android', 
+                        powerLevel: isTablet ? 'high' : 'medium',
+                        mobile: true
+                    };
+                } else if (isTouch && screenWidth < 1024) {
+                    return { type: 'mobile', platform: 'unknown', powerLevel: 'low', mobile: true };
+                }
+                
+                return { type: 'desktop', platform: 'desktop', powerLevel: 'high', mobile: false };
+            }
+            
+            checkSecurityRequirements() {
+                const isSecure = location.protocol === 'https:';
+                const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                const meetsSecurity = isSecure || isLocalhost;
+                
+                return {
+                    isSecure,
+                    isLocalhost,
+                    meetsSecurity,
+                    issues: meetsSecurity ? [] : ['Microphone access requires HTTPS or localhost']
+                };
+            }
+            
+            checkWebRTCSupport() {
+                const hasRTCPeerConnection = !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+                const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+                const available = hasRTCPeerConnection && hasGetUserMedia;
+                
+                return {
+                    available,
+                    hasRTCPeerConnection,
+                    hasGetUserMedia,
+                    quality: available ? 'high' : 'low'
+                };
+            }
+            
+            async checkAudioContextCapabilities() {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) {
+                        return { available: false, error: 'AudioContext not supported' };
+                    }
+                    
+                    const context = new AudioContext();
+                    const result = {
+                        available: true,
+                        sampleRate: context.sampleRate,
+                        maxChannelCount: context.destination.maxChannelCount,
+                        state: context.state
+                    };
+                    
+                    await context.close();
+                    return result;
+                } catch (error) {
+                    return { available: false, error: error.message };
+                }
+            }
+            
+            async checkMicrophoneAvailability() {
+                try {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                        return { available: false, error: 'enumerateDevices not supported' };
+                    }
+                    
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                    
+                    return {
+                        available: audioInputs.length > 0,
+                        count: audioInputs.length,
+                        hasDefaultDevice: audioInputs.some(device => device.deviceId === 'default')
+                    };
+                } catch (error) {
+                    return { available: false, error: error.message };
+                }
+            }
+            
+            estimateNetworkCapability() {
+                if ('connection' in navigator) {
+                    const connection = navigator.connection;
+                    const effectiveType = connection.effectiveType;
+                    
+                    const networkScores = {
+                        'slow-2g': 1,
+                        '2g': 2,
+                        '3g': 3,
+                        '4g': 4
+                    };
+                    
+                    return {
+                        type: effectiveType,
+                        score: networkScores[effectiveType] || 3,
+                        downlink: connection.downlink,
+                        rtt: connection.rtt
+                    };
+                }
+                
+                return { type: 'unknown', score: 3, downlink: null, rtt: null };
+            }
+            
+            estimateHardwareCapability() {
+                const cores = navigator.hardwareConcurrency || 2;
+                const memory = navigator.deviceMemory || 2;
+                
+                let score = 0;
+                if (cores >= 8) score += 3;
+                else if (cores >= 4) score += 2;
+                else score += 1;
+                
+                if (memory >= 8) score += 3;
+                else if (memory >= 4) score += 2;
+                else score += 1;
+                
+                return {
+                    cores,
+                    memory,
+                    score: Math.min(score, 6)
+                };
+            }
+            
+            async getBatteryStatus() {
+                if ('getBattery' in navigator) {
+                    try {
+                        const battery = await navigator.getBattery();
+                        return {
+                            level: battery.level,
+                            charging: battery.charging,
+                            constraint: battery.level < 0.2 && !battery.charging
+                        };
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return null;
+            }
+            
+            selectOptimalPCMFormat() {
+                const caps = this.deviceCapabilities;
+                if (!caps) return { format: 'pcm_16000', confidence: 'low', reasoning: ['Fallback due to failed capability detection'] };
+                
+                const formatScores = {
+                    'pcm_48000': 0,
+                    'pcm_44100': 0,
+                    'pcm_22050': 0,
+                    'pcm_16000': 0
+                };
+                
+                const reasoning = [];
+                
+                // Browser-specific scoring
+                if (caps.browser.name === 'chrome' && caps.browser.webRTCOptimal) {
+                    formatScores['pcm_44100'] += 3;
+                    formatScores['pcm_48000'] += 2;
+                    reasoning.push('Chrome optimized for 44.1kHz/48kHz');
+                } else if (caps.browser.name === 'firefox' && caps.browser.webRTCOptimal) {
+                    formatScores['pcm_44100'] += 3;
+                    formatScores['pcm_48000'] += 1;
+                    reasoning.push('Firefox optimized for 44.1kHz');
+                } else if (caps.browser.name === 'safari') {
+                    formatScores['pcm_44100'] += 2;
+                    formatScores['pcm_22050'] += 3;
+                    formatScores['pcm_48000'] += 1;
+                    reasoning.push('Safari optimized for 22.05kHz/44.1kHz');
+                } else {
+                    formatScores['pcm_22050'] += 3;
+                    formatScores['pcm_16000'] += 2;
+                    reasoning.push('Unknown browser - conservative format selection');
+                }
+                
+                // Device type adjustments
+                if (caps.device.type === 'desktop') {
+                    formatScores['pcm_48000'] += 2;
+                    formatScores['pcm_44100'] += 2;
+                    reasoning.push('Desktop device - can handle higher sample rates');
+                } else if (caps.device.type === 'tablet') {
+                    formatScores['pcm_44100'] += 2;
+                    formatScores['pcm_48000'] += 1;
+                    reasoning.push('Tablet device - balanced performance');
+                } else if (caps.device.type === 'mobile') {
+                    formatScores['pcm_44100'] += 1;
+                    formatScores['pcm_22050'] += 2;
+                    formatScores['pcm_16000'] += 1;
+                    reasoning.push('Mobile device - optimized for efficiency');
+                }
+                
+                // Network constraints
+                if (caps.network.score <= 2) {
+                    formatScores['pcm_16000'] += 2;
+                    formatScores['pcm_22050'] += 1;
+                    formatScores['pcm_44100'] -= 1;
+                    formatScores['pcm_48000'] -= 2;
+                    reasoning.push('Slow network - prioritizing lower bandwidth');
+                } else if (caps.network.score >= 4) {
+                    formatScores['pcm_48000'] += 1;
+                    formatScores['pcm_44100'] += 1;
+                    reasoning.push('Fast network - can handle higher quality');
+                }
+                
+                // Hardware constraints
+                if (caps.hardware.score <= 2) {
+                    formatScores['pcm_16000'] += 2;
+                    formatScores['pcm_22050'] += 1;
+                    formatScores['pcm_44100'] -= 1;
+                    formatScores['pcm_48000'] -= 2;
+                    reasoning.push('Limited hardware - optimizing for performance');
+                } else if (caps.hardware.score >= 5) {
+                    formatScores['pcm_48000'] += 2;
+                    formatScores['pcm_44100'] += 1;
+                    reasoning.push('Powerful hardware - can handle high quality');
+                }
+                
+                // Battery constraints
+                if (caps.battery && caps.battery.constraint) {
+                    formatScores['pcm_16000'] += 2;
+                    formatScores['pcm_22050'] += 1;
+                    formatScores['pcm_44100'] -= 1;
+                    formatScores['pcm_48000'] -= 2;
+                    reasoning.push('Low battery - optimizing for power efficiency');
+                }
+                
+                // Security constraints
+                if (!caps.security.meetsSecurity) {
+                    formatScores['pcm_16000'] += 1;
+                    formatScores['pcm_22050'] += 1;
+                    reasoning.push('Insecure connection - limited functionality');
+                }
+                
+                // Find best format
+                const bestFormat = Object.entries(formatScores)
+                    .sort(([,a], [,b]) => b - a)[0];
+                
+                const confidence = bestFormat[1] >= 5 ? 'high' : 
+                                 bestFormat[1] >= 3 ? 'medium' : 'low';
+                
+                return {
+                    format: bestFormat[0],
+                    confidence,
+                    scores: formatScores,
+                    reasoning
+                };
+            }
+            
+            buildFallbackChain() {
+                const primary = this.selectedFormat.format;
+                
+                // Create fallback order based on compatibility
+                const fallbackOrder = [
+                    'pcm_44100',  // Most universally compatible
+                    'pcm_22050',  // Good for Safari/mobile
+                    'pcm_16000',  // Maximum compatibility
+                    'pcm_48000',  // High quality but less compatible
+                    'mp3_44100_128' // Last resort
+                ];
+                
+                // Remove primary format and create chain
+                const fallbacks = fallbackOrder.filter(f => f !== primary);
+                return [primary, ...fallbacks];
+            }
+            
+            displayCompatibilityResults() {
+                const grid = document.getElementById('compatibilityGrid');
+                const caps = this.deviceCapabilities;
+                
+                if (!caps) {
+                    grid.innerHTML = '<div class="compatibility-item"><h4>Error</h4><div class="compatibility-value"><span class="check-fail">⚠</span>Failed to detect capabilities</div></div>';
+                    return;
+                }
+                
+                const items = [
+                    {
+                        title: 'Browser Support',
+                        value: caps.browser.name,
+                        status: caps.browser.webRTCOptimal ? 'pass' : 'warning',
+                        detail: `${caps.browser.name} v${caps.browser.version}`
+                    },
+                    {
+                        title: 'Device Type',
+                        value: caps.device.type,
+                        status: caps.device.powerLevel === 'high' ? 'pass' : caps.device.powerLevel === 'medium' ? 'warning' : 'fail',
+                        detail: `${caps.device.platform} ${caps.device.type}`
+                    },
+                    {
+                        title: 'WebRTC Support',
+                        value: caps.webrtc.available ? 'Available' : 'Not Available',
+                        status: caps.webrtc.available ? 'pass' : 'fail',
+                        detail: `Peer Connection: ${caps.webrtc.hasRTCPeerConnection ? 'Yes' : 'No'}, getUserMedia: ${caps.webrtc.hasGetUserMedia ? 'Yes' : 'No'}`
+                    },
+                    {
+                        title: 'Audio Context',
+                        value: caps.audioContext.available ? `${caps.audioContext.sampleRate}Hz` : 'Not Available',
+                        status: caps.audioContext.available ? 'pass' : 'fail',
+                        detail: caps.audioContext.available ? `${caps.audioContext.maxChannelCount} channels` : caps.audioContext.error
+                    },
+                    {
+                        title: 'Microphone',
+                        value: caps.microphone.available ? `${caps.microphone.count} device(s)` : 'Not Available',
+                        status: caps.microphone.available ? 'pass' : 'fail',
+                        detail: caps.microphone.error || 'Audio input devices detected'
+                    },
+                    {
+                        title: 'Security',
+                        value: caps.security.isSecure ? 'HTTPS' : 'HTTP',
+                        status: caps.security.meetsSecurity ? 'pass' : 'fail',
+                        detail: caps.security.isLocalhost ? 'Localhost connection' : caps.security.isSecure ? 'Secure connection' : 'Insecure connection'
+                    },
+                    {
+                        title: 'Network',
+                        value: caps.network.type || 'Unknown',
+                        status: caps.network.score >= 3 ? 'pass' : 'warning',
+                        detail: caps.network.downlink ? `${caps.network.downlink} Mbps` : 'Speed unknown'
+                    },
+                    {
+                        title: 'Hardware',
+                        value: `${caps.hardware.cores} cores`,
+                        status: caps.hardware.score >= 4 ? 'pass' : 'warning',
+                        detail: `${caps.hardware.memory}GB RAM`
+                    }
+                ];
+                
+                grid.innerHTML = items.map(item => `
+                    <div class="compatibility-item">
+                        <h4>${item.title}</h4>
+                        <div class="compatibility-value">
+                            <span class="check-${item.status}">${item.status === 'pass' ? '✓' : item.status === 'warning' ? '⚠' : '✗'}</span>
+                            <div>
+                                <div style="font-weight: 600;">${item.value}</div>
+                                <div style="font-size: 0.8rem; color: #6b7280;">${item.detail}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            updateFormatStatus() {
+                if (!this.selectedFormat) return;
+                
+                const indicator = document.getElementById('formatIndicator');
+                const status = document.getElementById('formatStatus');
+                
+                const confidenceColors = {
+                    'high': 'connected',
+                    'medium': 'warning',
+                    'low': 'warning'
+                };
+                
+                indicator.className = `status-indicator status-${confidenceColors[this.selectedFormat.confidence]}`;
+                status.textContent = `Selected: ${this.selectedFormat.format} (${this.selectedFormat.confidence} confidence)`;
+                
+                this.log(`Format selection: ${this.selectedFormat.format} (${this.selectedFormat.confidence} confidence)`, 'info');
+                this.log(`Reasoning: ${this.selectedFormat.reasoning.join(', ')}`, 'info');
+            }
+            
+            checkForCriticalIssues() {
+                const caps = this.deviceCapabilities;
+                if (!caps) return;
+                
+                const issues = [];
+                
+                // Security issues
+                if (!caps.security.meetsSecurity) {
+                    issues.push({
+                        type: 'error',
+                        title: 'Security Issue',
+                        message: 'Microphone access requires HTTPS or localhost connection.',
+                        solutions: [
+                            'Access this page via HTTPS',
+                            'Use localhost for development',
+                            'Deploy to a secure server'
+                        ]
+                    });
+                }
+                
+                // WebRTC issues
+                if (!caps.webrtc.available) {
+                    issues.push({
+                        type: 'error',
+                        title: 'WebRTC Not Supported',
+                        message: 'Your browser does not support WebRTC features required for voice communication.',
+                        solutions: [
+                            'Update your browser to the latest version',
+                            'Use Chrome, Firefox, Safari, or Edge',
+                            'Enable WebRTC in browser settings'
+                        ]
+                    });
+                }
+                
+                // Microphone issues
+                if (!caps.microphone.available) {
+                    issues.push({
+                        type: 'error',
+                        title: 'No Microphone Detected',
+                        message: 'No audio input devices were found on your system.',
+                        solutions: [
+                            'Connect a microphone or headset',
+                            'Check your audio device settings',
+                            'Ensure microphone drivers are installed'
+                        ]
+                    });
+                }
+                
+                // Browser-specific warnings
+                if (caps.browser.name === 'safari' && caps.device.mobile) {
+                    issues.push({
+                        type: 'warning',
+                        title: 'Safari Mobile Limitations',
+                        message: 'Safari on iOS has some WebRTC limitations that may affect performance.',
+                        solutions: [
+                            'Update to iOS 17+ for best compatibility',
+                            'Download the ElevenLabs mobile app',
+                            'Try using Chrome or Firefox if available'
+                        ],
+                        actions: [
+                            { text: 'Download iOS App', url: 'https://apps.apple.com/app/elevenlabs/id6738435711' }
+                        ]
+                    });
+                }
+                
+                if (caps.browser.name === 'safari' && !caps.browser.webRTCOptimal) {
+                    issues.push({
+                        type: 'warning',
+                        title: 'Outdated Safari Version',
+                        message: 'Your Safari version may have limited WebRTC support.',
+                        solutions: [
+                            'Update Safari to the latest version',
+                            'Update macOS/iOS for best compatibility',
+                            'Try using Chrome or Firefox as an alternative'
+                        ]
+                    });
+                }
+                
+                // Performance warnings
+                if (caps.hardware.score <= 2 || (caps.battery && caps.battery.constraint)) {
+                    issues.push({
+                        type: 'warning',
+                        title: 'Performance Limitations',
+                        message: 'Your device may have limited processing power or battery.',
+                        solutions: [
+                            'Close other browser tabs and applications',
+                            'Charge your device if battery is low',
+                            'Use a lower quality audio format if experiencing issues'
+                        ]
+                    });
+                }
+                
+                // Network warnings
+                if (caps.network.score <= 2) {
+                    issues.push({
+                        type: 'warning',
+                        title: 'Slow Network Connection',
+                        message: 'Your network connection may be too slow for optimal voice quality.',
+                        solutions: [
+                            'Switch to a faster internet connection',
+                            'Move closer to your WiFi router',
+                            'Use mobile data if WiFi is slow'
+                        ]
+                    });
+                }
+                
+                // Display issues
+                this.displayIssues(issues);
+            }
+            
+            displayIssues(issues) {
+                const container = document.getElementById('alertContainer');
+                container.innerHTML = '';
+                
+                issues.forEach(issue => {
+                    const alert = document.createElement('div');
+                    alert.className = `alert alert-${issue.type}`;
+                    
+                    let actionsHtml = '';
+                    if (issue.actions && issue.actions.length > 0) {
+                        actionsHtml = '<div class="alert-actions">' + 
+                            issue.actions.map(action => 
+                                `<a href="${action.url}" target="_blank" class="alert-btn">${action.text}</a>`
+                            ).join('') + 
+                            '</div>';
+                    }
+                    
+                    alert.innerHTML = `
+                        <h4>${issue.title}</h4>
+                        <p>${issue.message}</p>
+                        <ul>
+                            ${issue.solutions.map(solution => `<li>${solution}</li>`).join('')}
+                        </ul>
+                        ${actionsHtml}
+                    `;
+                    
+                    container.appendChild(alert);
+                });
+            }
+            
+            updateControlsAvailability() {
+                const caps = this.deviceCapabilities;
+                const startBtn = document.getElementById('startBtn');
+                const startBtnText = document.getElementById('startBtnText');
+                
+                if (!caps) {
+                    startBtn.disabled = true;
+                    startBtnText.textContent = 'Compatibility Check Failed';
+                    return;
+                }
+                
+                // Check if basic requirements are met
+                const canStart = caps.security.meetsSecurity && 
+                                caps.webrtc.available && 
+                                caps.microphone.available && 
+                                caps.audioContext.available;
+                
+                startBtn.disabled = !canStart || !this.elevenLabsLoaded;
+                
+                if (!this.elevenLabsLoaded) {
+                    startBtnText.textContent = 'Loading ElevenLabs...';
+                } else if (canStart) {
+                    startBtnText.textContent = 'Start Voice Assistant';
+                } else {
+                    startBtnText.textContent = 'Cannot Start - Check Issues Above';
+                }
+            }
+            
+            async startVoiceConversation() {
+                if (this.isActive) return;
+                
+                this.log("Starting voice conversation...", 'info');
+                this.updateStatus('connection', 'connecting', 'Requesting microphone permission...');
+                this.updateStatus('permission', 'connecting', 'Requesting access...');
+                
+                try {
+                    // Request microphone permission
+                    await this.requestMicrophonePermission();
+                    this.updateStatus('permission', 'connected', 'Permission granted');
+                    
+                    // Attempt to create widget with fallback chain
+                    await this.createWidgetWithFallback();
+                    
+                } catch (error) {
+                    this.log(`Failed to start conversation: ${error.message}`, 'error');
+                    this.updateStatus('connection', 'disconnected', `Failed: ${error.message}`);
+                    this.updateStatus('permission', 'disconnected', 'Permission denied');
+                    this.showAlert('error', 'Connection Failed', error.message);
+                }
+            }
+            
+            async requestMicrophonePermission() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                    
+                    // Stop the stream immediately - we just needed permission
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    this.log("Microphone permission granted", 'success');
+                    return true;
+                } catch (error) {
+                    this.log(`Microphone permission denied: ${error.message}`, 'error');
+                    throw new Error(`Microphone access denied: ${error.message}`);
+                }
+            }
+            
+            async createWidgetWithFallback() {
+                this.currentFallbackIndex = 0;
+                
+                for (let i = 0; i < this.fallbackChain.length; i++) {
+                    const format = this.fallbackChain[i];
+                    this.log(`Attempting to connect with format: ${format}`, 'info');
+                    this.updateStatus('connection', 'connecting', `Connecting with ${format}...`);
+                    
+                    try {
+                        const success = await this.createWidget(format);
+                        if (success) {
+                            this.log(`Successfully connected with ${format}`, 'success');
+                            this.updateStatus('connection', 'connected', `Connected with ${format}`);
+                            this.isActive = true;
+                            this.updateControlStates();
+                            return;
+                        }
+                    } catch (error) {
+                        this.log(`Failed with ${format}: ${error.message}`, 'warning');
+                    }
+                }
+                
+                // If all formats failed
+                throw new Error('All audio formats failed to connect');
+            }
+            
+            async createWidget(format) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const container = document.getElementById('widgetContainer');
+                        
+                        // Clear existing content
+                        container.innerHTML = '';
+                        
+                        // Create widget element
+                        const widget = document.createElement('elevenlabs-convai');
+                        widget.setAttribute('agent-id', this.agentId);
+                        widget.setAttribute('audio-format', format);
+                        
+                        // Configure connection type based on capabilities
+                        if (this.deviceCapabilities.webrtc.available && this.deviceCapabilities.browser.webRTCOptimal) {
+                            widget.setAttribute('connection-type', 'webrtc');
+                        }
+                        
+                        // Mobile optimizations
+                        if (this.deviceCapabilities.device.mobile) {
+                            widget.style.width = '100%';
+                            widget.style.maxWidth = '400px';
+                        }
+                        
+                        // Event listeners
+                        widget.addEventListener('connect', () => {
+                            this.log(`Widget connected successfully with ${format}`, 'success');
+                            this.currentWidget = widget;
+                            resolve(true);
+                        });
+                        
+                        widget.addEventListener('disconnect', () => {
+                            this.log('Widget disconnected', 'info');
+                            this.handleDisconnection();
+                        });
+                        
+                        widget.addEventListener('error', (event) => {
+                            this.log(`Widget error: ${JSON.stringify(event.detail)}`, 'error');
+                            container.innerHTML = '<div class="widget-placeholder"><p>Connection failed. Trying fallback...</p></div>';
+                            resolve(false);
+                        });
+                        
+                        // Timeout fallback
+                        const timeout = setTimeout(() => {
+                            this.log(`Connection timeout with ${format}`, 'warning');
+                            container.innerHTML = '<div class="widget-placeholder"><p>Connection timeout. Trying fallback...</p></div>';
+                            resolve(false);
+                        }, 10000);
+                        
+                        // Clear timeout on success
+                        widget.addEventListener('connect', () => clearTimeout(timeout));
+                        
+                        // Add to container
+                        container.appendChild(widget);
+                        
+                        // iOS-specific audio context resume
+                        if (this.deviceCapabilities.device.platform === 'ios') {
+                            this.setupIOSAudioFix(widget);
+                        }
+                        
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }
+            
+            setupIOSAudioFix(widget) {
+                const resumeAudioContext = () => {
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        const context = new AudioContext();
+                        
+                        if (context.state === 'suspended') {
+                            context.resume().then(() => {
+                                this.log('iOS Audio context resumed', 'info');
+                            });
+                        }
+                    }
+                };
+                
+                widget.addEventListener('touchstart', resumeAudioContext, { once: true });
+                document.addEventListener('touchstart', resumeAudioContext, { once: true });
+            }
+            
+            stopVoiceConversation() {
+                this.log("Stopping voice conversation...", 'info');
+                
+                if (this.currentWidget) {
+                    try {
+                        if (typeof this.currentWidget.endConversation === 'function') {
+                            this.currentWidget.endConversation();
+                        }
+                        this.currentWidget.remove();
+                    } catch (error) {
+                        this.log(`Error stopping widget: ${error.message}`, 'warning');
+                    }
+                    this.currentWidget = null;
+                }
+                
+                const container = document.getElementById('widgetContainer');
+                container.innerHTML = '<div class="widget-placeholder"><p>Voice assistant stopped</p><p style="font-size: 0.9rem; color: #9ca3af;">Click "Start Voice Assistant" to begin again</p></div>';
+                
+                this.isActive = false;
+                this.updateControlStates();
+                this.updateStatus('connection', 'disconnected', 'Disconnected');
+                this.log("Voice conversation stopped", 'info');
+            }
+            
+            handleDisconnection() {
+                this.isActive = false;
+                this.updateControlStates();
+                this.updateStatus('connection', 'disconnected', 'Disconnected unexpectedly');
+                
+                const container = document.getElementById('widgetContainer');
+                container.innerHTML = '<div class="widget-placeholder"><p>Connection lost</p><p style="font-size: 0.9rem; color: #9ca3af;">Click "Start Voice Assistant" to reconnect</p></div>';
+            }
+            
+            updateControlStates() {
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                
+                startBtn.disabled = this.isActive || !this.elevenLabsLoaded;
+                stopBtn.disabled = !this.isActive;
+            }
+            
+            updateStatus(type, status, message) {
+                const indicator = document.getElementById(`${type}Indicator`);
+                const statusEl = document.getElementById(`${type}Status`);
+                
+                if (indicator && statusEl) {
+                    indicator.className = `status-indicator status-${status}`;
+                    statusEl.textContent = message;
+                }
+            }
+            
+            showAlert(type, title, message, solutions = [], actions = []) {
+                const container = document.getElementById('alertContainer');
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type}`;
+                
+                let solutionsHtml = '';
+                if (solutions.length > 0) {
+                    solutionsHtml = '<ul>' + solutions.map(s => `<li>${s}</li>`).join('') + '</ul>';
+                }
+                
+                let actionsHtml = '';
+                if (actions.length > 0) {
+                    actionsHtml = '<div class="alert-actions">' + 
+                        actions.map(action => `<a href="${action.url}" target="_blank" class="alert-btn">${action.text}</a>`).join('') + 
+                        '</div>';
+                }
+                
+                alert.innerHTML = `
+                    <h4>${title}</h4>
+                    <p>${message}</p>
+                    ${solutionsHtml}
+                    ${actionsHtml}
+                `;
+                
+                container.appendChild(alert);
+                
+                // Auto-remove success alerts after 5 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        if (alert.parentElement) {
+                            alert.remove();
+                        }
+                    }, 5000);
+                }
+            }
+            
+            log(message, level = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                
+                console.log(logEntry);
+                
+                const debugLog = document.getElementById('debugLog');
+                const entry = document.createElement('div');
+                entry.className = 'debug-entry';
+                entry.innerHTML = `
+                    <span class="debug-timestamp">[${timestamp}]</span>
+                    <span class="debug-level-${level}">${message}</span>
+                `;
+                
+                debugLog.appendChild(entry);
+                
+                // Keep only last 50 entries
+                while (debugLog.children.length > 50) {
+                    debugLog.removeChild(debugLog.firstChild);
+                }
+                
+                debugLog.scrollTop = debugLog.scrollHeight;
+            }
+            
+            onElevenLabsLoaded() {
+                this.elevenLabsLoaded = true;
+                this.log("ElevenLabs script loaded successfully", 'success');
+                this.updateControlsAvailability();
+            }
+        }
+        
+        // Global instance
+        let voiceAssistant;
+        
+        // Global functions for UI
+        function startVoiceConversation() {
+            if (voiceAssistant) {
+                voiceAssistant.startVoiceConversation();
+            }
+        }
+        
+        function stopVoiceConversation() {
+            if (voiceAssistant) {
+                voiceAssistant.stopVoiceConversation();
+            }
+        }
+        
+        async function runCompatibilityTest() {
+            if (voiceAssistant) {
+                document.getElementById('alertContainer').innerHTML = '';
+                await voiceAssistant.runFullCompatibilityCheck();
+            }
+        }
+        
+        function clearDebugLog() {
+            const debugLog = document.getElementById('debugLog');
+            debugLog.innerHTML = '<div class="debug-entry"><span class="debug-timestamp">[--:--:--]</span><span class="debug-level-info">Debug log cleared</span></div>';
+        }
+        
+        function onElevenLabsLoaded() {
+            if (voiceAssistant) {
+                voiceAssistant.onElevenLabsLoaded();
+            }
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            voiceAssistant = new UniversalVoiceAssistant();
+        });
+        
+        // Handle page visibility changes (mobile optimization)
+        document.addEventListener('visibilitychange', () => {
+            if (voiceAssistant) {
+                if (document.hidden) {
+                    voiceAssistant.log("Page hidden - maintaining connection", 'info');
+                } else {
+                    voiceAssistant.log("Page visible - connection active", 'info');
+                }
+            }
+        });
+        
+        // Handle orientation changes (mobile)
+        window.addEventListener('orientationchange', () => {
+            if (voiceAssistant) {
+                setTimeout(() => {
+                    voiceAssistant.log("Orientation changed - checking layout", 'info');
+                }, 100);
+            }
+        });
+        
+        // Handle connection changes
+        if ('connection' in navigator) {
+            navigator.connection.addEventListener('change', () => {
+                if (voiceAssistant) {
+                    voiceAssistant.log(`Network changed: ${navigator.connection.effectiveType}`, 'info');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
